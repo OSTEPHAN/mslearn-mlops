@@ -6,7 +6,7 @@ on:
     branches:
       - main
 jobs:
-  job1:
+  job_linting:
     name: linting
     runs-on: ubuntu-latest
     steps:
@@ -22,5 +22,18 @@ jobs:
     - name: Run linting tests
       run: | 
         flake8 src/model/
+  job_unit_testing:
+    name: unit testing
+    runs-on: ubuntu-latest
+    steps:
+    - name: Run pytest
+      uses: pavelzw/pytest-action@v2
+      with:
+        verbose: true
+        emoji: true
+        job-summary: true
+        custom-arguments: '-q'
+        click-to-expand: true
+        report-title: 'Test Report'
 
 
