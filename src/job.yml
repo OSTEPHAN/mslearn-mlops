@@ -10,7 +10,7 @@ inputs:
     path: azureml:diabetes-dev-folder:1
   reg_rate: 0.01
 environment: azureml://registries/azureml/environments/sklearn-1.1/versions/7
-compute: ci493392f3
+compute: cluster36938e4f
 experiment_name: diabetes-training-automation
 display_name: diabetes-mlops-train
 description: "automation to train diabetes model"
