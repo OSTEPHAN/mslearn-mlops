@@ -10,7 +10,8 @@ env:
   RESOURCE_GROUP: rg-dp100-labs
   WORKSPACE_NAME: mlw-dp100-labs
 jobs:
-  build:
+  build-staging:
+    environment: development
     runs-on: ubuntu-latest
     steps:
     - name: check out repo
@@ -22,5 +23,21 @@ jobs:
     - name: install az ml extension
       run: az extension add -n ml -y        
     - name: setup
-      run: az ml job create --file job.yml --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME
+      run: az ml job create --file job-development.yml --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME --stream True
       working-directory: src
+  build-production:
+    needs: [build-staging]
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+    - name: check out repo
+      uses: actions/checkout@v2
+    - name: azure login
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}}
+    - name: install az ml extension
+      run: az extension add -n ml -y        
+    - name: setup
+      run: az ml job create --file job-production.yml --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME
+      working-directory: src      
