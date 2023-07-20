@@ -39,5 +39,24 @@ jobs:
     - name: install az ml extension
       run: az extension add -n ml -y        
     - name: setup
-      run: az ml job create --file job-production.yml --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME
-      working-directory: src      
+      run: az ml job create --file job-production.yml --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME --stream
+      working-directory: src   
+  deploy-model:
+    needs: [build-staging,build-production]
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+    - name: check out repo
+      uses: actions/checkout@v2
+    - name: azure login
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}}
+    - name: install az ml extension
+      run: az extension add -n ml -y        
+    - name: setup
+      run: |
+        az configure --defaults workspace=$WORKSPACE_NAME group=$RESOURCE_GROUP location=westeurope
+        $PATH=$(az ml job list --query "[0].outputs.default.path"  --output tsv)
+        $MODEL_NAME=$(az ml job list --query "[0].name"  --output tsv)
+        az ml model create --type "mlflow_model" --name $MODEL_NAME --path $PATH
