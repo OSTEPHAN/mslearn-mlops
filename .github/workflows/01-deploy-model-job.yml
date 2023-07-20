@@ -17,6 +17,7 @@ jobs:
     - name: install az ml extension
       run: az extension add -n ml -y        
     - name: register model
+      id: register
       run: |
         MODEL_PATH=$(az ml job list --query "[0].outputs.default.path" --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME --output tsv)
         echo "PATH is $MODEL_PATH"
@@ -27,26 +28,34 @@ jobs:
         MODEL_PATH=$(echo "azureml://jobs/$MODEL_NAME/outputs/artifacts/paths/model")
         echo "MODEL_PATH is $MODEL_PATH"
         
+        echo "MODEL_NAME=$MODEL_NAME" >> $GITHUB_OUTPUT
+        echo "MODEL_PATH=$MODEL_PATH" >> $GITHUB_OUTPUT
+
         az ml model create --type "mlflow_model" --name $MODEL_NAME --path $MODEL_PATH --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME
     - name: create online endpoint
+      id: endpoint
       run: |
         UUID=$(uuidgen | tr -d 'd' | head -c 8)
+        echo "UUID=$UUID" >> $GITHUB_OUTPUT
+
         cat <<EOF | tee create-endpoint.yml
         \$schema: https://azuremlschemas.azureedge.net/latest/managedOnlineEndpoint.schema.json
         name: mlflow-endpoint-$UUID
         auth_mode: key
         EOF
+
         az ml online-endpoint create --name mlflow-endpoint-$UUID -f ./create-endpoint.yml --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME
     - name: deploy model
       run: |
         cat <<EOF | tee mlflow-deployment.yml
         \$schema: https://azuremlschemas.azureedge.net/latest/managedOnlineDeployment.schema.json
         name: mlflow-deployment
-        endpoint_name: mlflow-endpoint-$UUID
-        model:azureml:$MODEL_NAME:latest
+        endpoint_name: mlflow-endpoint-${{ steps.endpoint.outputs.UUID }}
+        model:azureml:${{ steps.register.outputs.MODEL_NAME }}:latest
         instance_type: Standard_F2s_v2
         instance_count: 1
         az ml online-deployment create --file mlflow-deployment.yml --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME
+
       
       
     
