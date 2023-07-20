@@ -16,7 +16,7 @@ jobs:
         creds: ${{secrets.AZURE_CREDENTIALS}}
     - name: install az ml extension
       run: az extension add -n ml -y        
-    - name: setup
+    - name: register model
       run: |
         MODEL_PATH=$(az ml job list --query "[0].outputs.default.path" --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME --output tsv)
         echo "PATH is $MODEL_PATH"
@@ -28,3 +28,12 @@ jobs:
         echo "MODEL_PATH is $MODEL_PATH"
         
         az ml model create --type "mlflow_model" --name $MODEL_NAME --path $MODEL_PATH --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME
+    - name: create online endpoint
+      run: |
+        cat <<EOF | tee create-endpoint.yml
+        \$schema: https://azuremlschemas.azureedge.net/latest/managedOnlineEndpoint.schema.json
+        name: mlflow-endpoint
+        auth_mode: key
+        EOF
+        az ml online-endpoint create --name diabetes-mlflow -f ./create-endpoint.yml --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME
+    
