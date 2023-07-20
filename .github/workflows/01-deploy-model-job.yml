@@ -47,11 +47,15 @@ jobs:
         az ml online-endpoint create --name mlflow-endpoint-$UUID -f ./create-endpoint.yml --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME
     - name: deploy model
       run: |
+        UUID=${{ steps.endpoint.outputs.UUID }}
+        MODEL_NAME=${{ steps.register.outputs.MODEL_NAME }}
+        MODEL_VERSION=$(az ml model list --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME --name $MODEL_NAME --query "[0].version" -o tsv)
+        
         cat <<EOF | tee mlflow-deployment.yml
         \$schema: https://azuremlschemas.azureedge.net/latest/managedOnlineDeployment.schema.json
         name: mlflow-deployment
-        endpoint_name: mlflow-endpoint-${{ steps.endpoint.outputs.UUID }}
-        model:azureml:${{ steps.register.outputs.MODEL_NAME }}:latest
+        endpoint_name: mlflow-endpoint-$UUID
+        model: azureml:$MODEL_NAME:$MODEL_VERSION
         instance_type: Standard_DS3_v2
         instance_count: 3
         EOF
