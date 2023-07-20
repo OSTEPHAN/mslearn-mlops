@@ -1,4 +1,4 @@
-name:  Automated trigger an Azure Machine Learning job
+name:  Deploy model Azure Machine Learning job
 on:
   workflow_dispatch:
 env:
