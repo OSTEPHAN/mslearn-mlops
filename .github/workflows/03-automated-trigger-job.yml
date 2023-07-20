@@ -39,5 +39,6 @@ jobs:
     - name: install az ml extension
       run: az extension add -n ml -y        
     - name: setup
-      run: az ml job create --file job-production.yml --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME
-      working-directory: src      
+      run: az ml job create --file job-production.yml --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME --stream
+      working-directory: src   
+
