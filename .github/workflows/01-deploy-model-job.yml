@@ -1,0 +1,24 @@
+name:  Automated trigger an Azure Machine Learning job
+on:
+  workflow_dispatch:
+env:
+  RESOURCE_GROUP: rg-dp100-labs
+  WORKSPACE_NAME: mlw-dp100-labs
+jobs:
+  deploy-model:
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+    - name: check out repo
+      uses: actions/checkout@v2
+    - name: azure login
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}}
+    - name: install az ml extension
+      run: az extension add -n ml -y        
+    - name: setup
+      run: |
+        $PATH=$(az ml job list --query "[0].outputs.default.path" --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME --stream --output tsv)
+        $MODEL_NAME=$(az ml job list --query "[0].name" --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME --stream --output tsv)
+        az ml model create --type "mlflow_model" --name $MODEL_NAME --path $PATH
