@@ -24,4 +24,4 @@ jobs:
         MODEL_NAME=$(az ml job list --query "[0].name" --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME --output tsv)
         echo "MODEL_NAME is $MODEL_NAME"
         
-        az ml model create --type "mlflow_model" --name $MODEL_NAME --path $MODEL_PATH
+        az ml model create --type "mlflow_model" --name $MODEL_NAME --path $MODEL_PATH --resource-group $RESOURCE_GROUP --workspace-name $WORKSPACE_NAME
